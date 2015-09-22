@@ -26,9 +26,9 @@ if [ ! -s "$SCHEMA" ]; then
     usage
 fi
 
-# Should ideally remove comments, but for not it just makes the file single-line
+# Should ideally remove comments properly
 function pipe_xml() {
-    cat "$1" | tr '\n' ' ' 
+    cat "$1" | sed 's/<!--.*-->//g' | tr '\n' ' ' 
 }
 
 # Extracts all field names from schema
