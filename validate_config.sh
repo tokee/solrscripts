@@ -109,6 +109,8 @@ check_schema_copy_fields
 # solr config validation
 echo "Checking .*qf"
 check_config_fields "[^\"]*[.]\?qf"
+echo "Checking pf"
+check_config_fields "pf"
 echo "Checking facet.field"
 check_config_fields "facet[.]field"
 echo "Checking facet.range"
