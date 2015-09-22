@@ -61,7 +61,10 @@ function check_schema_copy_fields() {
     while read -r SFIELD; do
         local SOURCE=`echo "$SFIELD" | sed 's/.*source=\"\([^"]\+\)\".*/\1/'`
         local DEST=`echo "$SFIELD" | sed 's/.*dest=\"\([^"]\+\)\".*/\1/'`
-        if [ "." == ".`echo \"$FIELDS\" | grep $SOURCE`" ]; then
+        if [ "*" == "$SOURCE" ]; then
+            continue
+        fi
+        if [ "." == ".`echo \"$FIELDS\" | grep \"$SOURCE\"`" ]; then
             echo "   Solr schema copyField from '$SOURCE' to '$DEST' is invalid as the source is not defined in schema"
             VALERROR=true
         fi
@@ -70,6 +73,7 @@ function check_schema_copy_fields() {
             VALERROR=true
         fi
     done <<< "$SFIELDS"
+    echo "Fin"
 }
 
 # Checks that all fields used by the parameter exists in $FIELDS
@@ -77,7 +81,6 @@ function check_schema_copy_fields() {
 # Sample: [^\"]*[.]\?qf
 function check_config_fields() {
     local KEY="$1"
-    VALERROR=false
 
     local PARAMS=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"${KEY}\"[^>]*>[^<]*</[^>]\+>" | sed -e 's/[ ,]\+/ /g' -e 's/\^[0-9.]\+//g'`
     while read -r PARAM; do
@@ -96,12 +99,13 @@ function check_config_fields() {
 
 FIELDS=`get_field_names`
 TYPES=`get_field_types`
+VALERROR=false
+
 # solr schema validation
 echo "Checking schema fields and dynamicFields"
-check_schema_fields
+#check_schema_fields
 echo "Checking schema copyFields"
 check_schema_copy_fields
-exit
 
 # solr config validation
 echo "Checking .*qf"
