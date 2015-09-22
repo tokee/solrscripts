@@ -137,11 +137,12 @@
    <field name="includes" type="text_general" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true" />
 
    <field name="weight" type="float" indexed="true" stored="true"/>
-   <field name="price"  type="float" indexed="true" stored="true"/>
+   <field name="price"  type="nonfloat" indexed="true" stored="true"/>
    <field name="popularity" type="int" indexed="true" stored="true" />
    <field name="inStock" type="boolean" indexed="true" stored="true" />
 
-   <field name="store" type="location" indexed="true" stored="true"/>
+   <field name="store" 
+type="nonlocation" indexed="true" stored="true"/>
 
    <!-- Common metadata fields, named specifically to match up with
      SolrCell metadata when parsing rich documents such as Word, PDF.
@@ -217,7 +218,7 @@
    <dynamicField name="*_en"  type="text_en"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_b"  type="boolean" indexed="true" stored="true"/>
    <dynamicField name="*_bs" type="boolean" indexed="true" stored="true"  multiValued="true"/>
-   <dynamicField name="*_f"  type="float"  indexed="true"  stored="true"/>
+   <dynamicField name="*_f"  type="nonfloat"  indexed="true"  stored="true"/>
    <dynamicField name="*_fs" type="float"  indexed="true"  stored="true"  multiValued="true"/>
    <dynamicField name="*_d"  type="double" indexed="true"  stored="true"/>
    <dynamicField name="*_ds" type="double" indexed="true"  stored="true"  multiValued="true"/>
@@ -280,7 +281,7 @@
    <copyField source="name" dest="text"/>
    <copyField source="manu" dest="text"/>
    <copyField source="features" dest="text"/>
-   <copyField source="includes" dest="text"/>
+   <copyField source="nonincludes" dest="text"/>
    <copyField source="manu" dest="manu_exact"/>
 
    <!-- Copy the price into a currency enabled field (default USD) -->
@@ -288,12 +289,12 @@
 
    <!-- Text fields from SolrCell to search by default in our catch-all field -->
    <copyField source="title" dest="text"/>
-   <copyField source="author" dest="text"/>
+   <copyField source="author" dest="nontext"/>
    <copyField source="description" dest="text"/>
    <copyField source="keywords" dest="text"/>
    <copyField source="content" dest="text"/>
    <copyField source="content_type" dest="text"/>
-   <copyField source="resourcename" dest="text"/>
+   <copyField source="nonresourcename" dest="nontext"/>
    <copyField source="url" dest="text"/>
 
    <!-- Create a string version of author for faceting -->
