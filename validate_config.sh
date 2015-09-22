@@ -48,7 +48,7 @@ function check_schema_fields() {
         local DESIGNATION=`echo "$SFIELD" | sed 's/<\([^ ]\+\).*/\1/'`
         local NAME=`echo "$SFIELD" | sed 's/.*name=\"\([^"]\+\)\".*/\1/'`
         local TYPE=`echo "$SFIELD" | sed 's/.*type=\"\([^"]\+\)\".*/\1/'`
-        if [ "." == ".`echo \"$TYPES\" | grep $TYPE`" ]; then
+        if [ "." == ".`echo \"$TYPES\" | grep \"$TYPE\"`" ]; then
             echo "   Solr schema entry $DESIGNATION with name '$NAME' referenced fieldType '$TYPE', which is not defined in schema"
             VALERROR=true
         fi
@@ -75,6 +75,18 @@ function check_schema_copy_fields() {
     done <<< "$SFIELDS"
 }
 
+# Checks that aliases in solr config does not clash with fields in schema
+# (alias name must not be a field)
+function check_config_aliases() {
+    local ALIASES=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"f[.][^.\"]\+[.]qf\"" | sed -e 's/.*name=\"f[.]\([^\"]\+\)[.]qf\".*/\1/g'`
+    while read -r ALIAS; do
+        if [ "." != ".`echo \"$FIELDS\" | grep \"^$ALIAS$\"`" ]; then
+            echo "   Solr config alias 'f.$ALIAS.qf' is illegal as schema already has field '$ALIAS'"
+            VALERROR=true
+        fi
+    done <<< "$ALIASES"
+}
+
 # Checks that all fields used by the parameter exists in $FIELDS
 # Input:  parameter-key regexp
 # Sample: [^\"]*[.]\?qf
@@ -86,7 +98,7 @@ function check_config_fields() {
         local KEY=`echo "$PARAM" | sed 's/<[^>]*name=\"\([^\"]\+\)\".*/\1/'`
         local CFIELDS=`echo "$PARAM" | sed 's/[^>]*>\([^<]\+\).*/\1/'`
         for CFIELD in $CFIELDS; do
-            if [ "." == ".`echo \"$FIELDS\" | grep $CFIELD`" ]; then
+            if [ "." == ".`echo \"$FIELDS\" | grep \"^$CFIELD$\"`" ]; then
                 echo "   Solr config param '$KEY' referenced field '$CFIELD', which is not defined in schema"
                 VALERROR=true
             fi
@@ -102,11 +114,13 @@ VALERROR=false
 
 # solr schema validation
 echo "Checking schema fields and dynamicFields"
-#check_schema_fields
+check_schema_fields
 echo "Checking schema copyFields"
 check_schema_copy_fields
 
 # solr config validation
+echo "Checking aliases"
+check_config_aliases
 echo "Checking .*qf"
 check_config_fields "[^\"]*[.]\?qf"
 echo "Checking pf"
