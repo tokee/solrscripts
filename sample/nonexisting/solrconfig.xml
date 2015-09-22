@@ -970,6 +970,9 @@
        <str name="mlt.fl">text,features,name,sku,id,manu,cat,title,description,keywords,author,nonresourcename</str>
        <int name="mlt.count">3</int>
 
+       <!-- Alias -->
+       <str name="f.manu.qf">name^5.3</str> <!-- manu is an existing field -->
+
        <!-- Faceting defaults -->
        <str name="facet">on</str>
        <str name="facet.missing">true</str>
