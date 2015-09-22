@@ -73,7 +73,6 @@ function check_schema_copy_fields() {
             VALERROR=true
         fi
     done <<< "$SFIELDS"
-    echo "Fin"
 }
 
 # Checks that all fields used by the parameter exists in $FIELDS
