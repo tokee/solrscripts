@@ -5,6 +5,9 @@
 #
 # Caveat: This does not handle comments in XML properly
 #
+# Created 2015 by Toke Eskildsen <te@ekot.dk>
+# License: Apache 2.0 http://www.apache.org/licenses/LICENSE-2.0
+#
 
 function usage() {
     echo "Usage: ./validate_config.sh <solrconfig> <schema>"
@@ -43,6 +46,7 @@ function get_field_types() {
 
 # Checks that schema fields references existing fieldTypes
 function check_schema_fields() {
+    echo "Checking schema fields and dynamicFields"
     local SFIELDS=`cat "$SCHEMA" | tr '\n' ' ' | grep -o "<\(dynamic\)\?[fF]ield [^>]*>"`
     while read -r SFIELD; do
         local DESIGNATION=`echo "$SFIELD" | sed 's/<\([^ ]\+\).*/\1/'`
@@ -57,6 +61,7 @@ function check_schema_fields() {
 
 # Checks that copyFields in schema references existing fields
 function check_schema_copy_fields() {
+    echo "Checking schema copyFields"
     local SFIELDS=`pipe_xml "$SCHEMA" | grep -o "<copyField [^>]*>"`
     while read -r SFIELD; do
         local SOURCE=`echo "$SFIELD" | sed 's/.*source=\"\([^"]\+\)\".*/\1/'`
@@ -78,6 +83,7 @@ function check_schema_copy_fields() {
 # Checks that aliases in solr config does not clash with fields in schema
 # (alias name must not be a field)
 function check_config_aliases() {
+    echo "Checking config aliases and groups"
     local ALIASES=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"f[.][^.\"]\+[.]qf\"" | sed -e 's/.*name=\"f[.]\([^\"]\+\)[.]qf\".*/\1/g'`
     while read -r ALIAS; do
         if [ "." != ".`echo \"$FIELDS\" | grep \"^$ALIAS$\"`" ]; then
@@ -87,11 +93,12 @@ function check_config_aliases() {
     done <<< "$ALIASES"
 }
 
-# Checks that all fields used by the parameter exists in $FIELDS
+# Checks that all fields used by the parameter exists in $FIELDS from schema.xml
 # Input:  parameter-key regexp
 # Sample: [^\"]*[.]\?qf
 function check_config_fields() {
     local KEY="$1"
+    echo "Checking config ${2-$KEY}"
 
     local PARAMS=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"${KEY}\"[^>]*>[^<]*</[^>]\+>" | sed -e 's/[ ,]\+/ /g' -e 's/\^[0-9.]\+//g'`
     while read -r PARAM; do
@@ -109,32 +116,28 @@ function check_config_fields() {
 # echo "Processing config $CONFIG and schema $SCHEMA"
 
 FIELDS=`get_field_names`
+if [ "." == ".$FIELDS" ]; then
+    echo "Warning: Unable to locate any fields in ${SCHEMA}"
+fi
 TYPES=`get_field_types`
+if [ "." == ".$FIELDS" ]; then
+    echo "Warning: Unable to locate any field types in ${SCHEMA}"
+fi
 VALERROR=false
 
 # solr schema validation
-echo "Checking schema fields and dynamicFields"
 check_schema_fields
-echo "Checking schema copyFields"
 check_schema_copy_fields
 
 # solr config validation
-echo "Checking aliases"
 check_config_aliases
-echo "Checking .*qf"
-check_config_fields "[^\"]*[.]\?qf"
-echo "Checking pf"
-check_config_fields "pf"
-echo "Checking facet.field"
-check_config_fields "facet[.]field"
-echo "Checking facet.range"
-check_config_fields "facet[.]range"
-echo "Checking .*.fl"
-check_config_fields "[^\"]*[.]fl"
-echo "Checking facet.pivot"
-check_config_fields "facet[.]pivot"
-echo "Checking .*hl.alternateField"
-check_config_fields "[^\"]*hl[.]alternateField"
+check_config_fields "[^\"]*[.]\?qf"             "query fields: .*qf"
+check_config_fields "pf"                        "phrase fields: pf"
+check_config_fields "facet[.]field"             "facet fields: facet.field"
+check_config_fields "facet[.]range"             "facet range: facet.range"
+check_config_fields "[^\"]*[.]fl"               "fields: .*.fl"
+check_config_fields "facet[.]pivot"             "pivot faceting: facet.pivot"
+check_config_fields "[^\"]*hl[.]alternateField" "highlight alternate field: .*hl.alternateField"
 
 if [ "false" == "$VALERROR" ]; then
     echo "Done with no errors detected"
