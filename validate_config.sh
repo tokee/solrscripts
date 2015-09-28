@@ -64,9 +64,19 @@ function check_schema_copy_fields() {
     echo "Checking schema copyFields"
     local SFIELDS=`pipe_xml "$SCHEMA" | grep -o "<copyField [^>]*>"`
     while read -r SFIELD; do
-        local SOURCE=`echo "$SFIELD" | sed 's/.*source=\"\([^"]\+\)\".*/\1/'`
-        local DEST=`echo "$SFIELD" | sed 's/.*dest=\"\([^"]\+\)\".*/\1/'`
+        local SOURCE=`echo "$SFIELD" | sed 's/.*source=\"\([^"]*\)\".*/\1/'`
+        local DEST=`echo "$SFIELD" | sed 's/.*dest=\"\([^"]*\)\".*/\1/'`
         if [ "*" == "$SOURCE" ]; then
+            continue
+        fi
+        if [ "." == ".$SOURCE" ]; then
+            echo "   Solr schema copyField from '$SOURCE' to '$DEST' is invalid as the source is empty"
+            VALERROR=true
+            continue
+        fi
+        if [ "." == ".$DEST" ]; then
+            echo "   Solr schema copyField from '$SOURCE' to '$DEST' is invalid as the destination is empty"
+            VALERROR=true
             continue
         fi
         if [ "." == ".`echo \"$FIELDS\" | grep \"$SOURCE\"`" ]; then
@@ -103,7 +113,12 @@ function check_config_fields() {
     local PARAMS=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"${KEY}\"[^>]*>[^<]*</[^>]\+>" | sed -e 's/[ ,]\+/ /g' -e 's/\^[0-9.]\+//g'`
     while read -r PARAM; do
         local KEY=`echo "$PARAM" | sed 's/<[^>]*name=\"\([^\"]\+\)\".*/\1/'`
-        local CFIELDS=`echo "$PARAM" | sed 's/[^>]*>\([^<]\+\).*/\1/'`
+        local CFIELDS=`echo "$PARAM" | sed 's/[^>]*>\([^<]*\).*/\1/'`
+        if [ "." == ".$CFIELDS" ]; then
+            echo "   Solr config param '$KEY' had no fields as arguments"
+            VALERROR=true
+            continue
+        fi
         for CFIELD in $CFIELDS; do
             if [ "." == ".`echo \"$FIELDS\" | grep \"^$CFIELD$\"`" ]; then
                 echo "   Solr config param '$KEY' referenced field '$CFIELD', which is not defined in schema"

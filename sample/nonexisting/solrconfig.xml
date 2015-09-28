@@ -980,6 +980,7 @@
        <str name="facet.field">manu_exact</str>
        <str name="facet.field">noncontent_type</str>
        <str name="facet.field">author_s</str>
+       <str name="facet.field"></str>
        <str name="facet.query">ipod</str>
        <str name="facet.query">GB</str>
        <str name="facet.mincount">1</str>

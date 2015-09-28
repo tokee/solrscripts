@@ -284,6 +284,9 @@ type="nonlocation" indexed="true" stored="true"/>
    <copyField source="nonincludes" dest="text"/>
    <copyField source="manu" dest="manu_exact"/>
 
+   <copyField source="" dest="manu_exact"/>
+   <copyField source="manu" dest=""/>
+
    <!-- Copy the price into a currency enabled field (default USD) -->
    <copyField source="price" dest="price_c"/>
 
