@@ -111,6 +111,9 @@ function check_config_fields() {
     echo "Checking config ${2-$KEY}"
 
     local PARAMS=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"${KEY}\"[^>]*>[^<]*</[^>]\+>" | sed -e 's/[ ,]\+/ /g' -e 's/\^[0-9.]\+//g'`
+    if [ "." == ".$PARAMS" ]; then
+        return
+    fi
     while read -r PARAM; do
         local KEY=`echo "$PARAM" | sed 's/<[^>]*name=\"\([^\"]\+\)\".*/\1/'`
         local CFIELDS=`echo "$PARAM" | sed 's/[^>]*>\([^<]*\).*/\1/'`
