@@ -14,7 +14,7 @@
 export QUERY_FILE="saturation_test.queries"
 export SOLR="http://localhost:8983/solr/collection1"
 export BASE_SOLR_PARAMS="&wt=json"
-export WARMUP_COUNT=10 # First $WARMUP_COUNT queries will not be measured
+export WARMUPS=10 # First $WARMUPS queries will not be measured
 if [ -s "saturation_test.settings" ]; then
     source "saturation_test.settings"
 fi
@@ -41,26 +41,61 @@ if [ -s "$QUERY_FILE" ]; then
 fi
 
 #######################################################################################
-# Function for issuing queries
+# Single threaded query handling
 
-# Input: query-file
+# Input:  query-file
+# Output: query_count total_measured_time total_qtime
 function perform_requests() {
-    local QF="$2"
-    
-    while IFS='' read -r LINE || [[ -n "$line" ]]; do 
+    local QF="$1"
+    local START=`date +%s.%N`
+    local TOTAL_QTIME=0
+    local QCOUNT=0
+    while IFS='' read -r LINE; do 
         # TODO: Escape query
+        # TODO: Finishe the line
         local QTIME=`curl "${SOLR}?${BASE_SOLR_PARAM}&q=$LINE" | grep qtime`
+        local TOTAL_QTIME=$(( TOTAL_QTIME 0 QTIME ))
+        local QCOUNT=$(( QCOUNT + 1 ))
     done < "$QF"
+
+    local END=`date +%s.%N`
+    local MTIME=$(( END - START ))
+    echo "$QCOUNT $MTIME $TOTAL_QTIME"
 }
 
 #######################################################################################
 # Create query-files for the threads
 
+function create_query_files() {
+    rm t_queries.*
+    COUNTER=0
+    THREAD=1
+    while IFS='' read -r LINE || [[ -n "$line" ]]; do
+        COUNTER=$(( COUNTER + 1 ))
+        if [ "$COUNTER" -le "$WARMUPS" ]; then
+            echo "$LINE" >> "t_queries.warmup"
+        else
+            echo "$LINE" >> "t_queries.$THREAD"
+            THREAD=$(( THREAD + 1 ))
+            if [ "$THREAD" -gt "$THREADS" ]; then
+                THREAD=1
+            fi
+        fi
+    done < "$QUERY_FILE"
+}
+
+
 #######################################################################################
 # Warm up
 
+function warmup() {
+    # We ignore the result
+    local RESULT=`perform_requests "t_queries.warmup"`
+}
+
 #######################################################################################
 # Start threads and wait for them to finish
+
 
 #######################################################################################
 # Aggregate statistics
