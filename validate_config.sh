@@ -36,12 +36,12 @@ function pipe_xml() {
 
 # Extracts all field names from schema
 function get_field_names() {
-    pipe_xml "$SCHEMA" | grep -o "<\(dynamic\)\?[fF]ield[^>]\+name=\"[^_][^\"]*\"[^>]\+>" | sed 's/.*name=\"\([^\"]\+\).*/\1/'
+    pipe_xml "$SCHEMA" | grep -o "<\(dynamic\)\?[fF]ield[^>]\+name=[\"'][^_][^\"']*[\"'][^>]*>" | sed "s/.*name=[\"\']\([^\"\']\+\).*/\1/"
 }
 
 # Extracts all fieldtypes from schema
 function get_field_types() {
-    pipe_xml "$SCHEMA" | grep -o "<fieldType[^>]\+name=\"[^_][^\"]*\"[^>]\+>" | sed 's/.*name=\"\([^\"]\+\).*/\1/'
+    pipe_xml "$SCHEMA" | grep -o "<fieldType[^>]\+name=\"[^_][^\"']*[\"'][^>]*>" | sed "s/.*name=[\"']\([^\"']\+\).*/\1/"
 }
 
 # Checks that schema fields references existing fieldTypes
@@ -50,8 +50,8 @@ function check_schema_fields() {
     local SFIELDS=`cat "$SCHEMA" | tr '\n' ' ' | grep -o "<\(dynamic\)\?[fF]ield [^>]*>"`
     while read -r SFIELD; do
         local DESIGNATION=`echo "$SFIELD" | sed 's/<\([^ ]\+\).*/\1/'`
-        local NAME=`echo "$SFIELD" | sed 's/.*name=\"\([^"]\+\)\".*/\1/'`
-        local TYPE=`echo "$SFIELD" | sed 's/.*type=\"\([^"]\+\)\".*/\1/'`
+        local NAME=`echo "$SFIELD" | sed "s/.*name=[\"']\([^\"']\+\)[\"'].*/\1/"`
+        local TYPE=`echo "$SFIELD" | sed "s/.*type=[\"']\([^\"']\+\)[\"'].*/\1/"`
         if [ "." == ".`echo \"$TYPES\" | grep \"$TYPE\"`" ]; then
             echo "   Solr schema entry $DESIGNATION with name '$NAME' referenced fieldType '$TYPE', which is not defined in schema"
             VALERROR=true
@@ -64,8 +64,8 @@ function check_schema_copy_fields() {
     echo "Checking schema copyFields"
     local SFIELDS=`pipe_xml "$SCHEMA" | grep -o "<copyField [^>]*>"`
     while read -r SFIELD; do
-        local SOURCE=`echo "$SFIELD" | sed 's/.*source=\"\([^"]*\)\".*/\1/'`
-        local DEST=`echo "$SFIELD" | sed 's/.*dest=\"\([^"]*\)\".*/\1/'`
+        local SOURCE=`echo "$SFIELD" | sed "s/.*source=[\"']\([^\"']*\)[\"'].*/\1/"`
+        local DEST=`echo "$SFIELD" | sed "s/.*dest=[\"']\([^\"']*\)[\"'].*/\1/"`
         if [ "*" == "$SOURCE" ]; then
             continue
         fi
@@ -94,7 +94,7 @@ function check_schema_copy_fields() {
 # (alias name must not be a field)
 function check_config_aliases() {
     echo "Checking config aliases and groups"
-    local ALIASES=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"f[.][^.\"]\+[.]qf\"" | sed -e 's/.*name=\"f[.]\([^\"]\+\)[.]qf\".*/\1/g'`
+    local ALIASES=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=[\"']f[.][^.\"']\+[.]qf[\"']" | sed -e "s/.*name=[\"']f[.]\([^\"']\+\)[.]qf[\"'].*/\1/g"`
     while read -r ALIAS; do
         if [ "." != ".`echo \"$FIELDS\" | grep \"^$ALIAS$\"`" ]; then
             echo "   Solr config alias 'f.$ALIAS.qf' is illegal as schema already has field '$ALIAS'"
@@ -110,12 +110,12 @@ function check_config_fields() {
     local KEY="$1"
     echo "Checking config ${2-$KEY}"
 
-    local PARAMS=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=\"${KEY}\"[^>]*>[^<]*</[^>]\+>" | sed -e 's/[ ,]\+/ /g' -e 's/\^[0-9.]\+//g'`
+    local PARAMS=`pipe_xml "$CONFIG" | grep -o "<[^>]\+name=[\"']${KEY}[\"'][^>]*>[^<]*</[^>]\+>" | sed -e 's/[ ,]\+/ /g' -e 's/\^[0-9.]\+//g'`
     if [ "." == ".$PARAMS" ]; then
         return
     fi
     while read -r PARAM; do
-        local KEY=`echo "$PARAM" | sed 's/<[^>]*name=\"\([^\"]\+\)\".*/\1/'`
+        local KEY=`echo "$PARAM" | sed "s/<[^>]*name=[\"']\([^\"']\+\)[\"'].*/\1/"`
         local CFIELDS=`echo "$PARAM" | sed 's/[^>]*>\([^<]*\).*/\1/'`
         if [ "." == ".$CFIELDS" ]; then
             echo "   Solr config param '$KEY' had no fields as arguments"
@@ -149,13 +149,13 @@ check_schema_copy_fields
 
 # solr config validation
 check_config_aliases
-check_config_fields "[^\"]*[.]\?qf"             "query fields: .*qf"
-check_config_fields "pf"                        "phrase fields: pf"
-check_config_fields "facet[.]field"             "facet fields: facet.field"
-check_config_fields "facet[.]range"             "facet range: facet.range"
-check_config_fields "[^\"]*[.]fl"               "fields: .*.fl"
-check_config_fields "facet[.]pivot"             "pivot faceting: facet.pivot"
-check_config_fields "[^\"]*hl[.]alternateField" "highlight alternate field: .*hl.alternateField"
+check_config_fields "[^\"']*[.]\?qf"             "query fields: .*qf"
+check_config_fields "pf"                         "phrase fields: pf"
+check_config_fields "facet[.]field"              "facet fields: facet.field"
+check_config_fields "facet[.]range"              "facet range: facet.range"
+check_config_fields "[^\"']*[.]fl"               "fields: .*.fl"
+check_config_fields "facet[.]pivot"              "pivot faceting: facet.pivot"
+check_config_fields "[^\"']*hl[.]alternateField" "highlight alternate field: .*hl.alternateField"
 
 if [ "false" == "$VALERROR" ]; then
     echo "Done with no errors detected"
