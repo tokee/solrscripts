@@ -131,6 +131,42 @@ function check_config_fields() {
     done <<< "$PARAMS"
 }
 
+# Checks that field names and attributes has the correct versality
+# Example: Writing <fieldtype ...> is wrong; it should be fieldType ...>
+function check_schema_versality() {
+    echo "Checking schema field name versality"
+    # Important: Remember the trailing space
+    local VALID="analyzer copyField defaultSearchField dynamicField field fields fieldType filter schema solrQueryParser tokenizer types uniqueKey "
+    local LVALID=`echo "$VALID" | tr '[:upper:]' '[:lower:]'`
+
+    local PRESENT_SCHEMA_FIELDS=`cat "$SCHEMA" | grep -o -h "<[a-zA-Z]\+" ariel/schema.xml | sort | uniq | sed 's/<//' | tr '\n' ' '`
+    for PRESENT in `echo $PRESENT_SCHEMA_FIELDS`; do
+        local MATCH=`echo "$VALID" | grep "$PRESENT "`
+        if [ "." == ".$MATCH" ]; then
+            LPRESENT=`echo $PRESENT | tr '[:upper:]' '[:lower:]'`
+            local LMATCH=`echo "$LVALID" | grep "$LPRESENT "`
+            if [ "." == ".$LMATCH" ]; then
+                echo "   Unknown tag in schema (might be okay): '$PRESENT'"
+            else
+                VALERROR=true
+                # Wrong versality. Try finding the right tag
+                FOUND=false
+                for V in $VALID; do
+                    LV=`echo $V | tr '[:upper:]' '[:lower:]'`
+                    if [ "$LPRESENT" == "$LV" ]; then
+                        FOUND=true
+                        echo "   Tag '$PRESENT' should be written as '$V'"
+                        break
+                    fi
+                done
+                if [ "false" == "$FOUND" ]; then
+                    echo "   Internal error: Correct versality of tag '$PRESENT' could not be determined"
+                fi
+            fi
+        fi
+    done
+}
+
 # echo "Processing config $CONFIG and schema $SCHEMA"
 
 FIELDS=`get_field_names`
@@ -146,6 +182,7 @@ VALERROR=false
 # solr schema validation
 check_schema_fields
 check_schema_copy_fields
+check_schema_versality
 
 # solr config validation
 check_config_aliases
@@ -156,6 +193,7 @@ check_config_fields "facet[.]range"              "facet range: facet.range"
 check_config_fields "[^\"']*[.]fl"               "fields: .*.fl"
 check_config_fields "facet[.]pivot"              "pivot faceting: facet.pivot"
 check_config_fields "[^\"']*hl[.]alternateField" "highlight alternate field: .*hl.alternateField"
+
 
 if [ "false" == "$VALERROR" ]; then
     echo "Done with no errors detected"
