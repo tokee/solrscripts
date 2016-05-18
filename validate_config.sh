@@ -139,7 +139,7 @@ function check_schema_versality() {
     local VALID="analyzer copyField defaultSearchField dynamicField field fields fieldType filter schema solrQueryParser tokenizer types uniqueKey "
     local LVALID=`echo "$VALID" | tr '[:upper:]' '[:lower:]'`
 
-    local PRESENT_SCHEMA_FIELDS=`cat "$SCHEMA" | grep -o -h "<[a-zA-Z]\+" ariel/schema.xml | sort | uniq | sed 's/<//' | tr '\n' ' '`
+    local PRESENT_SCHEMA_FIELDS=`cat "$SCHEMA" | grep -o -h "<[a-zA-Z]\+" | sort | uniq | sed 's/<//' | tr '\n' ' '`
     for PRESENT in `echo $PRESENT_SCHEMA_FIELDS`; do
         local MATCH=`echo "$VALID" | grep "$PRESENT "`
         if [ "." == ".$MATCH" ]; then
