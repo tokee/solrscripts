@@ -136,7 +136,7 @@ function check_config_fields() {
 function check_schema_versality() {
     echo "Checking schema field name versality"
     # Important: Remember the trailing space
-    local VALID="analyzer copyField defaultSearchField dynamicField field fields fieldType filter schema solrQueryParser tokenizer types uniqueKey "
+    local VALID="analyzer copyField defaultSearchField dynamicField field fields fieldType filter schema solrQueryParser charFilter tokenizer types uniqueKey "
     local LVALID=`echo "$VALID" | tr '[:upper:]' '[:lower:]'`
 
     local PRESENT_SCHEMA_FIELDS=`cat "$SCHEMA" | grep -o -h "<[a-zA-Z]\+" | sort | uniq | sed 's/<//' | tr '\n' ' '`
