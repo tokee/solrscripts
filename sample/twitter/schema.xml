@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!-- 
+This schema is for Solr 7+ and will not work under Solr 6.
+-->
+
+<schema name="solwit" version="1.0">
+    <fields>
+        <!-- Special purpose meta-fields has explicit attributes to be sure they are set correctly -->
+        <field name="id" type="string" indexed="true" stored="true" docValues="true" required="true" />
+        <field name="_version_" type="long" indexed="true" stored="true" docValues="true" />
+        <field name="_root_" type="string" indexed="true" stored="true" docValues="true"/>
+        <field name="_text_" type="text_general" multiValued="true" /> <!-- Isn't this only used for schema-less? -->
+
+
+        <!--Not defined in SolrFields. Schema only defintion -->
+        <field name="index_time" type="date" default="NOW" />
+
+        <field name="access_terms"         type="string" multiValued="true" />
+        <!-- TODO: Specify relevant Tweet-fields here -->
+        
+        <dynamicField name="*_i"       type="int"    indexed="true"  stored="true" />
+        <dynamicField name="*_is"      type="int"    indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_s"       type="string"  indexed="true"  stored="true" />
+        <dynamicField name="*_ss"      type="string"  indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_l"       type="long"   indexed="true"  stored="true" />
+        <dynamicField name="*_ls"      type="long"   indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_t"       type="text_general" indexed="true" stored="true" />
+        <dynamicField name="*_txt"     type="text_general" indexed="true" stored="true" />
+        <dynamicField name="*_b"       type="boolean" indexed="true" stored="true" />
+        <dynamicField name="*_bs"      type="boolean" indexed="true" stored="true" multiValued="true" />
+        <dynamicField name="*_f"       type="float"  indexed="true"  stored="true" />
+        <dynamicField name="*_fs"      type="float"  indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_d"       type="double" indexed="true"  stored="true" />
+        <dynamicField name="*_ds"      type="double" indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_coordinate" type="double" indexed="true"  stored="false" />
+        <dynamicField name="*_dt"      type="date"    indexed="true"  stored="true" />
+        <dynamicField name="*_dts"     type="date"    indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_p"       type="location" indexed="true" stored="true" />
+        <dynamicField name="*_ti"      type="int"    indexed="true"  stored="true" />
+        <dynamicField name="*_tis"     type="int"    indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_tl"      type="long"   indexed="true"  stored="true" />
+        <dynamicField name="*_tls"     type="long"   indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_tf"      type="float"  indexed="true"  stored="true" />
+        <dynamicField name="*_tfs"     type="float"  indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_td"      type="double" indexed="true"  stored="true" />
+        <dynamicField name="*_tds"     type="double" indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="*_tdt"     type="date"  indexed="true"  stored="true" />
+        <dynamicField name="*_tdts"    type="date"  indexed="true"  stored="true" multiValued="true" />
+        <dynamicField name="ignored_*" type="ignored" multiValued="true" />
+        <dynamicField name="attr_*"    type="text_general" indexed="true" stored="true" multiValued="true" />
+        <dynamicField name="random_*"  type="random" />
+
+    </fields>
+
+    <uniqueKey>id</uniqueKey>
+
+    <!-- TODO: Remove all copyFields where the source is indexed as text and adjust solrconfig.xml
+         to also search in those fields (edismax parser qf) -->
+    <copyField source="author" dest="text" />
+    
+    <types>
+        <!-- Guiding principles:
+
+             Atomic types are single-valued indexed & docValues, but not stored
+             Text types are single-valued indexed & stored, but not docValued (DV is not currently possible for Text)
+
+             Deviations are normally handled by overriding for the specific fields
+             -->
+
+        <fieldType name="string"   class="solr.StrField"         indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="boolean"  class="solr.BoolField"        indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="int"      class="solr.IntPointField"    indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="float"    class="solr.FloatPointField"  indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="long"     class="solr.LongPointField"   indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="double"   class="solr.DoublePointField" indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="date"     class="solr.DatePointField"   indexed="true"  docValues="true" stored="false" multiValued="false" sortMissingLast="true" />
+        <fieldType name="binary"   class="solr.BinaryField"      indexed="false" docValues="false" stored="true" multiValued="false" />
+        <fieldType name="random"   class="solr.RandomSortField" />
+
+        <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="true" multiValued="false">
+            <analyzer>
+                <tokenizer class="solr.WhitespaceTokenizerFactory" />
+            </analyzer>
+        </fieldType>
+
+        <!-- Used for parsing file paths, so that ["MOO BOO/FooBar_zoo.baz"] becomes ["moo", "boo", "foo", "bar", "zoo", "baz"] -->
+        <fieldType name="path" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="true" multiValued="false">
+            <analyzer type="index">
+                <tokenizer class="solr.StandardTokenizerFactory" />
+                <filter class="solr.WordDelimiterFilterFactory" preserveOriginal="0" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_path.txt" />
+                <filter class="solr.LowerCaseFilterFactory" />
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.StandardTokenizerFactory" />
+                <filter class="solr.WordDelimiterFilterFactory" preserveOriginal="0" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_path.txt" />
+                <filter class="solr.LowerCaseFilterFactory" />
+            </analyzer>
+        </fieldType>
+
+        <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="true" multiValued="false">
+            <analyzer type="index">
+                <tokenizer class="solr.StandardTokenizerFactory" />
+                <filter class="solr.LowerCaseFilterFactory" />
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.StandardTokenizerFactory" />
+                <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true" />
+                <filter class="solr.LowerCaseFilterFactory" />
+            </analyzer>
+        </fieldType>
+
+    </types>
+</schema>
