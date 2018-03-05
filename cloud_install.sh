@@ -7,16 +7,17 @@
 ###############################################################################
 # CONFIG
 ###############################################################################
+
+
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 source general.conf
 SHOME=`pwd`
 : ${CACHE:=`pwd`/cache}
 : ${CLOUD:=`pwd`/cloud}
 popd > /dev/null
-
-################################################################################
-# FUNCTIONS
-################################################################################
 
 function usage() {
     echo "Usage: ./cloud_install.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`>"
@@ -32,10 +33,14 @@ check_parameters() {
     fi
 }
 
+################################################################################
+# FUNCTIONS
+################################################################################
+
 # Input: Package
 function check_package() {
-    if [ ! -s ${CACHE}/$1 ]; then
-        echo "Activating get_solr.sh as package $1 is not available"
+    if [[ ! -s "${CACHE}/$1" ]]; then
+        echo "Activating get_solr.sh as package $1 is not available at ${CACHE}/$1"
         $SHOME/get_solr.sh
         if [ ! -s ${CACHE}/$1 ]; then
             >&2 "Error: Package $P not available after call to get_solr.sh"
@@ -122,10 +127,10 @@ function install() {
     mkdir -p ${CLOUD}
     DEST=$VERSION
     if [ -d ${CLOUD}/$DEST ]; then
-        echo "Solr $DEST already installed"
+        echo "Solr $DEST already installed in ${CLOUD}/$DEST"
         return
     fi
-    echo "- Installing SolrCloud $DEST"
+    echo "- Installing SolrCloud $DEST at ${CLOUD}/$DEST"
     if [ $VERSION == 4.10.4-sparse ]; then
         SPARSE_WAR=sparse-4.10.war
         VERSION=4.10.4
@@ -158,7 +163,11 @@ function install() {
 check_parameters "$@"
 
 pushd ${BASH_SOURCE%/*} > /dev/null
-for V in $@; do
-    install $V
-done
+if [[ "." == ".$@" ]]; then
+    install "$VERSION"
+else
+    for V in $@; do
+        install $V
+    done
+fi
 popd > /dev/null
