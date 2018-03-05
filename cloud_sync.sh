@@ -17,6 +17,8 @@ source general.conf
 : ${CLOUD:="$(pwd)/cloud"}
 # If true, existing configs with the same ID are overwritten
 : ${FORCE_CONFIG:="false"}
+: ${EXISTENCE_RETRIES:=5}
+: ${RETRY_DELAY_SECONDS:=5}
 popd > /dev/null
 
 function usage() {
@@ -109,6 +111,28 @@ upload_config() {
     fi
 }
 
+# Input: collection
+check_collection_existence() {
+    local CHECKS=0
+    while [[ "$CHECKS" -lt "$EXISTENCE_RETRIES" ]]; do
+        CHECKS=$((CHECKS+1))
+        set +e
+        local EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>")
+        set -e
+        if [ ! "." == ".$EXISTS" ]; then
+            break
+        fi
+        
+        if [[ "$CHECKS" -lt "$EXISTENCE_RETRIES" ]]; then
+            echo "Unable to verify existence of ${COLLECTION}. Sleeping ${RETRY_DELAY_SECONDS} seconds and retrying..."
+            sleep ${RETRY_DELAY_SECONDS}
+        else
+            >&2 echo "Although the API call for creating the collection $COLLECTION responded with success, the collection is not available in the cloud. This is likely due to problems with solrconfig.xml or schema.xml in config set ${CONFIG_NAME}."
+            exit 2
+        fi
+    done
+}
+
 create_new_collection() {
     echo "Collection $COLLECTION does not exist. Creating new $SHARDS shard collection with $REPLICAS replicas and config $CONFIG_NAME"
     URL="http://$SOLR/solr/admin/collections?action=CREATE&name=${COLLECTION}&numShards=${SHARDS}&maxShardsPerNode=${SHARDS}&replicationFactor=${REPLICAS}&collection.configName=${CONFIG_NAME}"
@@ -119,22 +143,7 @@ create_new_collection() {
         >&2 echo "$RESPONSE"
         exit 1
     fi
-    
-    set +e
-    EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
-    set -e
-    if [ "." == ".$EXISTS" ]; then
-        echo "Unable to verify existence of ${COLLECTION}. Sleeping 5 seconds and retrying..."
-        sleep 5
-        set +e
-        EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
-        set -e
-    fi
-    if [ "." == ".$EXISTS" ]; then
-        >&2 echo "Although the API call for creating the collection $COLLECTION responded with success, the collection is not available in the cloud. This is likely due to problems with solrconfig.xml or schema.xml in config set ${CONFIG_NAME}."
-        exit 2
-    fi
-
+   
     echo "Collection with config $CONFIG_NAME available at http://$SOLR/solr/"
 }
 
