@@ -10,6 +10,9 @@
 # CONFIG
 ###############################################################################
 
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd "${BASH_SOURCE%/*}" > /dev/null
 source general.conf
 : ${CLOUD:="$(pwd)/cloud"}
@@ -20,10 +23,6 @@ source general.conf
 : ${RETRIES:=30}            # How many times to try before giving up
 : ${SLEEP:=10}              # How many seconds to sleep between each retry
 popd > /dev/null
-
-################################################################################
-# FUNCTIONS
-################################################################################
 
 function usage() {
     local CLOUDS=$(ls "${CLOUD}" | tr '\n' ' ')
@@ -52,6 +51,10 @@ check_parameters() {
     : ${SOLR:="${HOST}:${SOLR_BASE_PORT}/solr"}
     URL="${SOLR}/${COLLECTION}/select?q=*:*&rows=0&facet=false&hl=false&wt=json"
 }
+
+################################################################################
+# FUNCTIONS
+################################################################################
 
 debug() {
     if [[ "true" == "$DEBUG" ]]; then

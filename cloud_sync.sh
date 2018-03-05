@@ -9,16 +9,15 @@ set -e
 # CONFIG
 ###############################################################################
 
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 source general.conf
 : ${CLOUD:="$(pwd)/cloud"}
 # If true, existing configs with the same ID are overwritten
 : ${FORCE_CONFIG:="false"}
 popd > /dev/null
-
-################################################################################
-# FUNCTIONS
-################################################################################
 
 function usage() {
     echo "Usage: ./cloud_sync.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`> <config_folder> <config_id> [collection]"
@@ -64,6 +63,10 @@ check_parameters() {
     fi
 
 }
+
+################################################################################
+# FUNCTIONS
+################################################################################
 
 locate_solr_scripts() {
     if [ "." == ".`echo \" $LAYOUT2_VERSIONS \" | grep \" $VERSION \"`" ]; then
@@ -120,6 +123,13 @@ create_new_collection() {
     set +e
     EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
     set -e
+    if [ "." == ".$EXISTS" ]; then
+        echo "Unable to verify existence of ${COLLECTION}. Sleeping 5 seconds and retrying..."
+        sleep 5
+        set +e
+        EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
+        set -e
+    fi
     if [ "." == ".$EXISTS" ]; then
         >&2 echo "Although the API call for creating the collection $COLLECTION responded with success, the collection is not available in the cloud. This is likely due to problems with solrconfig.xml or schema.xml in config set ${CONFIG_NAME}."
         exit 2

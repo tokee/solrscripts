@@ -10,16 +10,15 @@
 # CONFIG
 ###############################################################################
 
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 source general.conf
 : ${CLOUD:=`pwd`/cloud}
 : ${RETRIES:=6} # default number of retries on start probe before giving up
 : ${AUTO_INSTALL:=false}
 popd > /dev/null
-
-################################################################################
-# FUNCTIONS
-################################################################################
 
 usage() {
     echo "Usage: ./cloud_start.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`>"
@@ -56,6 +55,10 @@ check_parameters() {
         fi
     fi
 }
+
+################################################################################
+# FUNCTIONS
+################################################################################
 
 start_zoo() {
     for Z in `seq 1 $ZOOS`; do
@@ -103,6 +106,7 @@ start_solr() {
 
 check_parameters "$@"
 
+echo "Starting ZooKeepers and Solrs in ${CLOUD}/$VERSION"
 pushd ${CLOUD}/$VERSION > /dev/null
 start_zoo
 start_solr

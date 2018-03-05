@@ -10,15 +10,14 @@
 # CONFIG
 ###############################################################################
 
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 source general.conf
 : ${CLOUD:=`pwd`/cloud}
 : ${SOLR:="$HOST:$SOLR_BASE_PORT/solr"}
 popd > /dev/null
-
-################################################################################
-# FUNCTIONS
-################################################################################
 
 function usage() {
     echo "Usage: ./cloud_delete.sh collection"
@@ -40,12 +39,19 @@ check_parameters() {
     fi
 }
 
+################################################################################
+# FUNCTIONS
+################################################################################
+
+delete_collection() {
+    DELETE_URL="$SOLR/admin/collections?action=DELETE&name=${COLLECTION}"
+    echo "Calling $DELETE_URL"
+    curl "$DELETE_URL"
+}
+
 ###############################################################################
 # CODE
 ###############################################################################
 
 check_parameters "$@"
-
-DELETE_URL="$SOLR/admin/collections?action=DELETE&name=${COLLECTION}"
-echo "Calling $DELETE_URL"
-curl "$DELETE_URL"
+delete_collection

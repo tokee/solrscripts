@@ -11,14 +11,13 @@
 # CONFIG
 ###############################################################################
 
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 source general.conf
 : ${CLOUD:=`pwd`/cloud}
 popd > /dev/null
-
-################################################################################
-# FUNCTIONS
-################################################################################
 
 function usage() {
     echo "Usage: ./cloud_start.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`>"
@@ -45,6 +44,10 @@ check_parameters() {
         exit 3
     fi
 }
+
+################################################################################
+# FUNCTIONS
+################################################################################
 
 stop_zoo() {
     # Be sure to shut down the ZooKeepers last

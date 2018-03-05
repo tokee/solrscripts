@@ -9,6 +9,9 @@
 # CONFIG
 ###############################################################################
 
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Local overrides
+fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 source general.conf
 : ${CLOUD:=`pwd`/cloud}
@@ -19,14 +22,14 @@ popd > /dev/null
 
 : ${RETRIES:=6} # default number of retries on start probe before giving up
 
-################################################################################
-# FUNCTIONS
-################################################################################
-
 function usage() {
     echo "Usage: ./cloud_optimize.sh"
     exit $1
 }
+
+################################################################################
+# FUNCTIONS
+################################################################################
 
 CORES=""
 SOLR_PORT=$SOLR_BASE_PORT
