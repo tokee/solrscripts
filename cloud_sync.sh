@@ -53,6 +53,9 @@ check_parameters() {
         >&2 echo "The config folder '$CONFIG_FOLDER' does not exist"
         usage 2
     fi
+    pushd "$CONFIG_FOLDER" > /dev/null
+    CONFIG_FOLDER=$(pwd)
+    popd > /dev/null
     if [ ! -s $CONFIG_FOLDER/schema.xml ]; then
         >&2 echo "No schema.xml in the config folder '$CONFIG_FOLDER'"
         usage 21
