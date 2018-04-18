@@ -126,10 +126,6 @@ function install() {
     # Shared setup
     mkdir -p ${CLOUD}
     DEST=$VERSION
-    if [ -d ${CLOUD}/$DEST ]; then
-        echo "Solr $DEST already installed in ${CLOUD}/$DEST"
-        return
-    fi
     echo "- Installing SolrCloud $DEST at ${CLOUD}/$DEST"
     if [ $VERSION == 4.10.4-sparse ]; then
         SPARSE_WAR=sparse-4.10.war
