@@ -96,6 +96,7 @@ download "http://archive.apache.org/dist/lucene/solr/5.5.5/solr-5.5.5.tgz" solr-
 download "http://archive.apache.org/dist/lucene/solr/6.6.2/solr-6.6.2.tgz" solr-6.6.2.tgz
 download "http://archive.apache.org/dist/lucene/solr/7.1.0/solr-7.1.0.tgz" solr-7.1.0.tgz
 download "http://archive.apache.org/dist/lucene/solr/7.2.1/solr-7.2.1.tgz" solr-7.2.1.tgz
+download "http://archive.apache.org/dist/lucene/solr/7.3.0/solr-7.3.0.tgz" solr-7.3.0.tgz
 download "$ZOO_URL" `basename "$ZOO_URL"`
 compile_trunk
 
