@@ -94,7 +94,6 @@ start_solr() {
             >&2 echo "Error: Unable to start Solr server using command"
             >&2 echo "$SOLR_START_COMMAND"
             >&2 echo "$SOLR_START_RESULT"
-            exit 28
         fi
         SOLR_PORT=$(( SOLR_PORT + 10 ))
     done
