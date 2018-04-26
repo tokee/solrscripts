@@ -96,12 +96,13 @@ get_override() {
     local ATTRIBUTE="$3"
     local VALUE="$4" # DEFAULT
 
-    local TYPE="$3"
-    TYPE=$(get_type "$SCHEMA" "$FIELD_NAME")
+    local TYPE=$(get_type "$SCHEMA" "$FIELD")
     if [[ ! -z "$TYPE" ]]; then
+        # Type overrides default
         local VALUE=$(get_attribute "$SCHEMA" fieldType name "$TYPE" "$ATTRIBUTE" "$VALUE")
     fi
-    get_attribute "$SCHEMA" field name "$TYPE" "$ATTRIBUTE" "$VALUE"
+    # Field overrides type
+    get_attribute "$SCHEMA" field name "$FIELD" "$ATTRIBUTE" "$VALUE"
 }
 
 # TODO: Highly inefficient as everything is scanned multiple times
