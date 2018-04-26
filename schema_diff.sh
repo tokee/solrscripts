@@ -8,6 +8,7 @@
 # to compare properly.
 #
 # TODO: Also look at omitNorms, positionStep & positionIncrementGap
+# TODO: dynamicField
 #
 
 ###############################################################################
@@ -17,6 +18,10 @@
 pushd ${BASH_SOURCE%/*} > /dev/null
 : ${SCHEMA1:="$1"}
 : ${SCHEMA2:="$2"}
+# field attributes to output and use for comparison
+# The attribute 'retrievable' is a meta-attribute that is true if either stored
+# or docValues has the given default and false otherwise.
+: ${ATTRIBUTES:="type:? class:? indexed:true stored:true docValues:false multiValued:false"}
 popd > /dev/null
 
 function usage() {
@@ -112,13 +117,23 @@ expand_field() {
     local FIELD_NAME="$2"
 
     echo -n "<field name=\"$FIELD_NAME\" "
-    echo -n "type=\"$(get_type "$SCHEMA" "$FIELD_NAME" "?")\" "
     # TODO: Check if multi-valued:false and stored:true are the real Solr defaults
     # This might involve a list of known classes
-    for ATT in class:? indexed:true stored:true docValues:false multiValued:false; do
+    for ATT in $ATTRIBUTES; do
         local AT=$(cut -d: -f1 <<< "$ATT")
         local DEF=$(cut -d: -f2 <<< "$ATT")
-        echo -n "${AT}=\"$(get_override "$SCHEMA" "$FIELD_NAME" $AT "$DEF")\" "
+
+        if [[ "$AT" == "retrievable" ]]; then
+            local STORED=$(get_override "$SCHEMA" "$FIELD_NAME" stored "dummy123")
+            local DV=$(get_override "$SCHEMA" "$FIELD_NAME" docValues "dummy123")
+            if [[ ".$STORED" == ".$DEF" || ".$DV" == ".$DEF" ]]; then
+                echo -n "${AT}=\"true\" "
+            else
+                echo -n "${AT}=\"false\" "
+            fi
+        else
+            echo -n "${AT}=\"$(get_override "$SCHEMA" "$FIELD_NAME" $AT "$DEF")\" "
+        fi
     done
     echo -n "/>"
 }
