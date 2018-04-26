@@ -4,7 +4,6 @@ Small scripts for processing Solr files
 
 Requirements: bash, grep & sed (should work under Cygwin as no special tricks are used)
 
-
 ## schema_diff.sh
 
 Compares the fields and their primary values between two schemas. Usable for knowing what
@@ -84,3 +83,9 @@ Checking .*hl.alternateField
    Solr config param 'f.title.hl.alternateField' referenced field 'nontitle', which is not defined in schema
 ```
 
+
+## cloud_*.sh
+
+Scripts for installing & controlling SolrClouds.
+
+TODO: Expand this description.
