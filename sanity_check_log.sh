@@ -16,9 +16,11 @@ if [[ -s "cloud.conf" ]]; then
 fi
 pushd ${BASH_SOURCE%/*} > /dev/null
 : ${LOGS:="$@"}
-: ${TOPX_DUPLICATES:="5"}
-: ${TOPX_SLOW:="10"}
+: ${TOPX_DUPLICATES:="6"}
+: ${TOPX_SLOW:="6"}
 : ${DEFAULT_STRING_LIMIT:="200"}
+: ${MAX_TIMEOUTS:="5"}
+: ${MAX_SERVER_ERRORS:="5"}
 popd > /dev/null
 
 usage() {
@@ -58,7 +60,7 @@ all_with_zero_hits() {
 }
 
 queries_only() {
-    grep -o "q=[^&]\+&" | sed 's/q=\(.*\)&/\1/'
+    grep -o "[^a-z]q=[^&]\+&" | sed 's/.q=\(.*\)&/\1/'
 }
 
 # Output: WITH_HITS, ZERO_HITS, ONE_PLUS_HITS
@@ -94,13 +96,9 @@ limit() {
 }
 
 slowest() {
-    echo "---"
-    all_with_hits
-#    all_with_hits | sed 's/^\(.*\QTime=\)\([0-9]\+\)\(.*\)$/\2 \1\2\3/' | sort -rn | head -n $TOPX_SLOW | sed 's/^[0-9]* \(.*\)$/\1/'
+    all_with_hits  | sed -e 's/.* INFO  .*params=//' -e 's/^\(.*\QTime=\)\([0-9]\+\)\(.*\)$/\2 \1\2\3/' | sort -rn | head -n $TOPX_SLOW
+     #| sed 's/^[0-9]* \(.*\)$/\1/'
 }
-
-slowest
-exit
 
 # Output: UNIQUE_ZERO_HIT_QUERIES, MOST_POPULAR_COUNT, MOST_POPULAR
 queries() {
@@ -117,18 +115,40 @@ queries() {
     while IFS=$'\n' read -r LINE || [[ -n "$line" ]]; do
         local Q=$(sed 's/^ *[0-9]\+ \(.*\)$/\1/' <<< "$LINE")
         local QC=$(sed 's/ *\([0-9]\+\) .*/\1/' <<< "$LINE")
-        echo "  ${QC}: $(limit $Q)"
+        echo "  ${QC}: $(limit "$Q")"
     done <<< "$(head -n $TOPX_DUPLICATES $T)"
 
+    slowest > $T
+    
     echo "* Top-$TOPX_SLOW slowest queries"
-    slowest
+    while IFS=$'\n' read -r LINE || [[ -n "$line" ]]; do
+        local TQ=$(sed 's/ {.*[^a-z]q=\([^&]\+\)&.*/ \1/' <<< "$LINE")
+        echo "  $(limit "$TQ")"
+    done <<< "$(head -n $TOPX_DUPLICATES $T)"
+    
+    echo "* Top-$TOPX_SLOW slowest full requests"
+    while IFS=$'\n' read -r LINE || [[ -n "$line" ]]; do
+        echo "  $LINE"
+    done <<< "$(head -n $TOPX_DUPLICATES $T)"
     
     rm $T
+}
+
+timeouts() {
+    echo "*** Timeouts (max ${MAX_TIMEOUTS})"
+    cat $LOGS | grep "ERROR.*Timeout occured while waiting response from server at" | head -n $MAX_TIMEOUTS
+}
+
+server_errors() {
+    echo "*** Server errors (max ${MAX_SERVER_ERRORS})"
+    cat $LOGS | grep " status=500 " | head -n $MAX_SERVER_ERRORS
 }
 
 all_steps() {
     base_stats
     queries
+    timeouts
+    server_errors
 }
 
 ###############################################################################
