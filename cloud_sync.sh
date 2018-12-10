@@ -5,6 +5,9 @@ set -e
 # Uploads configurations and creates collections in SolrCloud
 #
 
+# TODO: Reload collection if existing config is force updated and collection already exists
+# FIXME: Check for existing collection is broken for Solr 7.3.0
+
 ###############################################################################
 # CONFIG
 ###############################################################################
