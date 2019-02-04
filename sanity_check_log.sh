@@ -44,19 +44,19 @@ check_parameters() {
 ################################################################################
 
 all_select() {
-    cat $LOGS | grep 'path=/select params='
+    zcat -f $LOGS | grep 'path=/select params='
 }
 
 all_with_hits() {
-    cat $LOGS | grep 'path=/select params=' | grep ' hits=[0-9]'
+    zcat -f $LOGS | grep 'path=/select params=' | grep ' hits=[0-9]'
 }
 
 all_with_1plus_hits() {
-    cat $LOGS | grep 'path=/select params=' | grep ' hits=[1-9]'
+    zcat -f $LOGS | grep 'path=/select params=' | grep ' hits=[1-9]'
 }
 
 all_with_zero_hits() {
-    cat $LOGS | grep 'path=/select params=' | grep ' hits=0'
+    zcat -f $LOGS | grep 'path=/select params=' | grep ' hits=0'
 }
 
 queries_only() {
@@ -136,12 +136,12 @@ queries() {
 
 timeouts() {
     echo "*** Timeouts (max ${MAX_TIMEOUTS})"
-    cat $LOGS | grep "ERROR.*Timeout occured while waiting response from server at" | head -n $MAX_TIMEOUTS
+    zcat -f $LOGS | grep "ERROR.*Timeout occured while waiting response from server at" | head -n $MAX_TIMEOUTS
 }
 
 server_errors() {
     echo "*** Server errors (max ${MAX_SERVER_ERRORS})"
-    cat $LOGS | grep " status=500 " | head -n $MAX_SERVER_ERRORS
+    zcat -f $LOGS | grep " status=500 " | head -n $MAX_SERVER_ERRORS
 }
 
 all_steps() {
