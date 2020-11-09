@@ -17,6 +17,7 @@ source general.conf
 SHOME=`pwd`
 : ${CACHE:=`pwd`/cache}
 : ${CLOUD:=`pwd`/cloud}
+: ${VERSION:="$1"}
 popd > /dev/null
 
 function usage() {
@@ -25,11 +26,9 @@ function usage() {
 }
 
 check_parameters() {
-    if [[ -z "$1" && -z "$VERSION" ]]; then
+    if [[ -z "$VERSION" ]]; then
         echo "No Solr version specified."$'\n'
         usage
-    elif [[ ! -z "$1" ]]; then
-        VERSION="$1"
     fi
 }
 
