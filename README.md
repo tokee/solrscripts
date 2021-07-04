@@ -4,6 +4,8 @@ Small scripts for processing Solr files
 
 Requirements: bash, grep & sed (should work under Cygwin as no special tricks are used)
 
+Configuration is in ./general.conf
+
 ## schema_diff.sh
 
 Compares the fields and their primary values between two schemas. Usable for knowing what
@@ -83,9 +85,101 @@ Checking .*hl.alternateField
    Solr config param 'f.title.hl.alternateField' referenced field 'nontitle', which is not defined in schema
 ```
 
+## get_solr.sh
+
+Downloads and prepares Solr and ZooKeeper for later install
+
+## saturation_test.sh
+
+### Tool for finding the saturation point of Solr requests.
+
+Takes a file with queries and spawns X threads issuing 1/X of those queries as fast as they can. 
+At the end, throughput and average latency is reported.
+
+To avoid skewing the results by everithing being cached, consider dropping
+the disk cache between tests and let the script warm up the searcher.
+## get_solr.sh
+### Downloads and prepares Solr and ZooKeeper for later install
+
 
 ## cloud_*.sh
 
 Scripts for installing & controlling SolrClouds.
 
-TODO: Expand this description.
+
+## cloud_alias.sh
+
+Lists or creates aliases for Solrcloud
+
+Usage: ./cloud_alias.sh [alias [collections]]
+ 
+*  List all aliases: ./cloud_alias.sh
+*  List collections in alias: ./cloud_alias.sh alias
+*  Create alias: ./cloud_alias.sh alias collection1,collection2,collection3
+
+## cloud_delete.sh
+
+Deletes a SolrCloud collection
+
+Usage: ./cloud_delete.sh collection
+
+TODO: Figure out which cloud is running and stop it, so that version need not be specified
+
+## cloud_install.sh
+
+Installs a specific SolrCloud
+
+Usage: ./cloud_install.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`>
+
+## cloud_optimize.sh
+
+Optimize a SolrCloud collection
+
+Deprecated (read: Never used)
+
+## cloud_start.sh
+
+Starts a specific SolrCloud
+
+Usage: ./cloud_start.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`>
+
+TODO: Increase 5 second timeout on shutdown to avoid stale write.lock
+
+## cloud_status.sh
+
+Lists collections and configurations in the cloud
+
+Usage: `./cloud_status.sh`
+
+Specify Solr port with `SOLR_BASE_PORT=xxxx ./cloud_status.sh`
+    
+Requirements: jq
+
+## cloud_stop.sh
+
+Stops a specific SolrCloud
+
+Usage: `./cloud_start.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`>`
+
+TODO: 
+* Figure out which cloud is running and stop it, so that version need not be specified
+* In case of hard stop, remove write.lock
+
+## cloud_sync.sh
+
+Uploads configurations and creates collections in SolrCloud
+
+Usage: `./cloud_sync.sh <`echo \"$VERSIONS\" | sed 's/ / | /g'`> <config_folder> <config_id> [collection]`
+
+If VERSION is specified in custom.conf, it can be skipped, reducing the call to
+   `./cloud_sync.sh <config_folder> <config_id> [collection]`
+
+## cloud_verify.sh
+
+Verifies that Solr is up and running with a specified collection
+
+Reports either total hitCount or "na"
+
+Usage: `./cloud_verify.sh <$VLIST> <collection>`
+
+## TODO: Expand this description.
