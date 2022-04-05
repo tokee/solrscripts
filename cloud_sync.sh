@@ -120,7 +120,10 @@ check_collection_existence() {
     while [[ "$CHECKS" -lt "$EXISTENCE_RETRIES" ]]; do
         CHECKS=$((CHECKS+1))
         set +e
-        local EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>")
+        >&2 echo "--- $(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | jq -r '.collections[]')"
+        local EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | jq -r '.collections[]' | grep '^${COLLECTION}$')
+#        local EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>")
+
         set -e
         if [ ! "." == ".$EXISTS" ]; then
             break
@@ -183,8 +186,9 @@ if [ -z $COLLECTION ]; then
 fi
 
 # Update existing or create new collection
+#EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
 set +e
-EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
+EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | jq -r '.collections[]')
 set -e
 if [ "." == ".$EXISTS" ]; then
     create_new_collection

@@ -33,7 +33,8 @@ check_parameters() {
     fi
     if [[ "." == ".$COLLECTION" ]]; then
         echo "No collection specified. Available collections are"
-        curl -s "$SOLR/admin/collections?action=LIST" | grep -o "<arr name=.collections.*</arr>" | grep -o "<str>[^<]*</str>" | sed 's/<\/*str>//g'
+        curl -s "$SOLR/admin/collections?action=LIST" | jq -r '.collections[]'
+#        curl -s "$SOLR/admin/collections?action=LIST" | grep -o "<arr name=.collections.*</arr>" | grep -o "<str>[^<]*</str>" | sed 's/<\/*str>//g'
         echo ""
         usage 4
     fi
