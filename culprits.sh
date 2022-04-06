@@ -17,6 +17,9 @@
 : ${FACET_LIMIT_MAX:="1000"}
 : ${FACET_OFFSET_MAX:="1000"}
 
+# Used to filter log entries, e.g. "grep 2020-06-15" to only process logs from that date
+: ${FILTER:="cat"}
+
 function usage() {
     cat <<EOF
 Usage: ./culprits.sh <logfile> <logfile>*
@@ -81,7 +84,7 @@ grouped_print() {
 # Returns the filename of a temporary file holding the stats
 base_numeric_stats() {
     local DEST=$(mktemp)
-    zcat -f $LOGS | zgrep -o "[a-zA-Z0-9_.-]\+=[0-9]\+" | grep -v "NOW\|QTime\|hits" | \
+    zcat -f $LOGS | $FILTER | zgrep -o "[a-zA-Z0-9_.-]\+=[0-9]\+" | grep -v "NOW\|QTime\|hits" | \
         ## Sort & uniqueify
         sort | uniq -c | \
         # Swap count and param-pair for ordered output

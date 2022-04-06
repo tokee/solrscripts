@@ -15,6 +15,9 @@ if [[ -s "cloud.conf" ]]; then
     source "cloud.conf"     # Local overrides
 fi
 pushd ${BASH_SOURCE%/*} > /dev/null
+if [[ -s "cloud.conf" ]]; then
+    source "cloud.conf"     # Project overrides
+fi
 source general.conf
 : ${CLOUD:=`pwd`/cloud}
 popd > /dev/null
