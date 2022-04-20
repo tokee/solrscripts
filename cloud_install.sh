@@ -43,7 +43,8 @@ check_parameters() {
 function check_package() {
     if [[ ! -s "${CACHE}/$1" ]]; then
         echo "Activating get_solr.sh as package $1 is not available at ${CACHE}/$1"
-        $SHOME/get_solr.sh "$VERSION"
+        SPECIFIC_SOLR="$VERSION"
+        . $SHOME/get_solr.sh
         if [ ! -s ${CACHE}/$1 ]; then
             >&2 "Error: Package $P not available after call to get_solr.sh"
             exit 2
