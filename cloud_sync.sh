@@ -77,7 +77,9 @@ check_parameters() {
 ################################################################################
 
 locate_solr_scripts() {
-    if [ "." == ".`echo \" $LAYOUT2_VERSIONS \" | grep \" $VERSION \"`" ]; then
+    if [[ "9." == $(grep -o "^.." <<< "$VERSION") ]]; then
+        : ${SOLR_SCRIPTS:="${CLOUD}/${VERSION}/solr1/server/scripts/cloud-scripts"}
+    elif [ "." == ".`echo \" $LAYOUT2_VERSIONS \" | grep \" $VERSION \"`" ]; then
         : ${SOLR_SCRIPTS:="${CLOUD}/${SHARDS}/solr1/example/scripts/cloud-scripts"}
     else
         : ${SOLR_SCRIPTS:="${CLOUD}/${VERSION}/solr1/server/scripts/cloud-scripts"}
@@ -191,7 +193,7 @@ fi
 # Update existing or create new collection
 #EXISTS=`curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | grep -o "<str>${COLLECTION}</str>"`
 set +e
-EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | jq -r '.collections[]')
+EXISTS=$(curl -m 30 -s "http://$SOLR/solr/admin/collections?action=LIST" | jq -r '.collections[]' | grep "^${COLLECTION}$")
 set -e
 if [ "." == ".$EXISTS" ]; then
     create_new_collection
